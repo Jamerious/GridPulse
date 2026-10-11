@@ -10,7 +10,7 @@ rows = cursor.fetchall()
 
 print("--- LATEST GRID READINGS ---")
 for row in rows:
-    print(f"Time: {rows[0]} | Region: {row[1]} | Demand: {row[2]} MW")
+    print(f"Time: {row[0]} | Region: {row[1]} | Demand: {row[2]} MW")
 
 cursor.close()
 connection.close()
