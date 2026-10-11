@@ -302,7 +302,7 @@ const Homeowner = () => {
 
   if (loading) {
     return (
-      <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+      <div className="page-transition py-12 flex flex-col items-center justify-center text-gray-500">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
         <p className="text-base font-medium">Loading live storm risk & home telemetry...</p>
       </div>
