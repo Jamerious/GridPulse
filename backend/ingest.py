@@ -61,7 +61,7 @@ def ingeset_weather_data(cursor):
      weather_code = current.get("weather_code")
 
      cursor.execute(
-        """ INSERT INTO weather_readings (time,location_name, tempature_f, wind_speed_mph, condition_code)
+        """ INSERT INTO weather_readings (time,location_name, temperature_f, wind_speed_mph, condition_code)
         VALUES (%s,%s,%s,%s,%s);
         """,
         (time_val,"Columbia-SC", temp_f, wind_mph, weather_code)
@@ -69,61 +69,59 @@ def ingeset_weather_data(cursor):
      return True
 
 def ingest_power_plants(cursor):
-    """Fetches power plants from NC and SC from the EIA API"""
+    """Inserts mock power generation facilities for NC and SC into the database based on real plants"""
+    mock_plants = [
+        # Nuclear
+        (101, "Catawba Nuclear Station", "SC", "Nuclear", 2258.0, 35.0503, -81.0745),
+        (102, "McGuire Nuclear Station", "NC", "Nuclear", 2200.0, 35.4320, -80.9483),
+        (106, "Oconee Nuclear Station", "SC", "Nuclear", 2538.0, 34.7939, -82.8986),
+        (107, "Brunswick Nuclear Plant", "NC", "Nuclear", 1875.0, 33.9583, -78.0103),
+        (108, "Shearon Harris Nuclear Plant", "NC", "Nuclear", 964.0, 35.6333, -78.9564),
+        (109, "V.C. Summer Nuclear Station", "SC", "Nuclear", 966.0, 34.2981, -81.3153),
 
-    url = f"https://api.eia.gov/v2/electricity/operating-data/data/?api_key={EIA_API_KEY}&frequency=annual&data[0]=nameplate-capacity-mw&facets[state][]=NC&facets[state][]=SC&length=5000"
+        # Coal & Steam
+        (104, "Marshall Steam Station", "NC", "Coal", 2090.0, 35.5907, -80.9634),
+        (110, "Roxboro Steam Station", "NC", "Coal", 2422.0, 36.4858, -79.0711),
+        (111, "Cross Generating Station", "SC", "Coal", 2390.0, 33.3611, -80.1147),
+        (112, "Winyah Generating Station", "SC", "Coal", 1260.0, 33.3253, -79.3517),
+        (125, "Wateree Generating Station", "SC", "Coal", 700.0, 33.8275, -80.6225),
 
-    try:
-        response = requests.get(url, timeout=(3.0, 15.0))
-        response.raise_for_status()
+        # Natural Gas & Combined Cycle
+        (113, "Dan River Combined Cycle Station", "NC", "Natural Gas", 620.0, 36.4950, -79.7153),
+        (114, "Buck Combined Cycle Station", "NC", "Natural Gas", 620.0, 35.7061, -80.3756),
+        (115, "Jasper Generating Station", "SC", "Natural Gas", 875.0, 32.3389, -81.1111),
+        (116, "Asheville Combined Cycle Plant", "NC", "Natural Gas", 560.0, 35.4650, -82.5489),
+        (117, "Lincoln Combustion Turbine Station", "NC", "Natural Gas", 1200.0, 35.4389, -81.1072),
 
-    except requests.exceptions.RequestException as e:
-      print(f"Network error fetching pwoer plants: {e}")
-      return 0
-      
-    data = response.json()
-    records = data.get('response', {}).get('data', [])
+        # Hydroelectric & Pumped Storage
+        (103, "Bad Creek Hydro Station", "SC", "Hydroelectric", 1065.0, 34.9754, -82.9972),
+        (118, "Fontana Dam Hydro Station", "NC", "Hydroelectric", 304.0, 35.4522, -83.8050),
+        (119, "Cowans Ford Hydro Station", "NC", "Hydroelectric", 350.0, 35.4358, -80.9639),
+        (120, "Lake Murray Saluda Hydro Station", "SC", "Hydroelectric", 207.0, 34.0531, -81.2189),
+        (121, "Pinopolis Hydro Station", "SC", "Hydroelectric", 128.0, 33.2458, -79.9989),
 
-    if not records:
-        print("No plant records found.")
-        return 0 
+        # Solar & Renewables
+        (105, "Lee Solar / Mixed Facility", "SC", "Solar", 75.0, 34.9962, -81.4581),
+        (122, "Conetoe Solar Facility", "NC", "Solar", 80.0, 35.8167, -77.4167),
+        (123, "Innovative Solar 42", "NC", "Solar", 71.0, 34.9700, -78.9500),
+        (124, "SolAmerica Hampton Solar", "SC", "Solar", 20.0, 32.8683, -81.1350)
+    ]
 
-    rows_to_insert = []
-    for item in records:
-         plant_id = item.get('plantCode')
-         plant_name = item.get('plantName')
-         state = item.get('state')
-         fuel = item.get('sectorName') or item.get('energysource')
-         capacity = item.get('nameplate-capacity-mw')
-         lat = item.get('latitude')
-         lon = item.get('longitude')
-
-         if plant_id and plant_name:
-              rows_to_inst = (
-                int(plant_id) if str(plant_id).isdigit() else None,
-                plant_name,
-                state,
-                str(fuel) if fuel else "Unknown",
-                float(capacity) if capacity else 0.0,
-                float(lat) if lat else 0.0,
-                float(lon) if lon else 0.0
-              )
-
-              rows_to_insert.append(rows_to_inst)
-
-    if rows_to_insert:
-         query = """
-            INSERT INTO power_plants (plant_id, plant_name, state, primary_fuel, capacity_mw, latitude, longitude)
-            VALUES %s
-            ON CONFLICT (plant_id) DO UPDATE
-            SET capacity_mw = EXCLUDED.capacity_mw, primary_fuel = EXCLUDED.primary_fuel;
-            """
-
-         valid_rows = [r for r in rows_to_insert if r[0] is not None]
-         execute_values(cursor, query, valid_rows)
-         return len(valid_rows)
-
-    return 0
+    query = """
+        INSERT INTO power_plants (plant_id, plant_name, state, primary_fuel, capacity_mw, latitude, longitude)
+        VALUES %s
+        ON CONFLICT (plant_id) DO UPDATE
+        SET plant_name = EXCLUDED.plant_name,
+            state = EXCLUDED.state,
+            capacity_mw = EXCLUDED.capacity_mw,
+            primary_fuel = EXCLUDED.primary_fuel,
+            latitude = EXCLUDED.latitude,
+            longitude = EXCLUDED.longitude;
+    """
+    
+    execute_values(cursor, query, mock_plants)
+    print(f"Inserted/updated {len(mock_plants)} mock power plants into database.")
+    return len(mock_plants)
 
 if __name__ == "__main__":
 

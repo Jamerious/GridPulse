@@ -20,7 +20,7 @@ const LogInfo = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="min-h-[80vh] flex items-center justify-center"
+      className="page-transition min-h-[80vh] flex items-center justify-center"
     >
       <div className="flex flex-col items-center gap-10 p-14 min-w-[340px] sm:min-w-[460px] border rounded-xl shadow-lg">
         <h1 className="text-3xl font-bold">Logging in as?</h1>

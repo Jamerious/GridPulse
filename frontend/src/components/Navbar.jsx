@@ -29,8 +29,14 @@ const Navbar = () => {
         </li>
 
         <li>
-          <NavLink to="/contact" className={linkStyle}>
-            CONTACT
+          <NavLink to="/Homeowner" className={linkStyle}>
+            HOMEOWNER
+          </NavLink>
+        </li>
+
+        <li>
+          <NavLink to="/operator" className={linkStyle}>
+            OPERATOR
           </NavLink>
         </li>
       </ul>
