@@ -24,7 +24,7 @@ if (name && email && password) {
     <form
     /*makes the welcome in the center*/
        onSubmit={onSubmitHandler}
-  className="min-h-[80vh] flex flex-col items-center justify-center gap-4"
+  className="page-transition min-h-[80vh] flex flex-col items-center justify-center gap-4"
     >
 
       <h1 className="text-3xl font-bold">Welcome</h1>
