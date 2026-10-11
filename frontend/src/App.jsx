@@ -1,10 +1,11 @@
 import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
-import LogInfo from './pages/loginfo'
+import LogInfo from './pages/LogInfo'
 import Homeowner from './pages/Homeowner'
 import Navbar from './components/Navbar'
 import Operator from './pages/Operator'
+import { ProtectedRoute, PendingAuthRoute } from './components/ProtectedRoute'
 
 export const App = () => {
   return (
@@ -12,15 +13,42 @@ export const App = () => {
       <Navbar />
       
       <Routes>
-        
-       {/*pathways for pages to take*/}
+        {/* Public Landing / Login Page */}
+        <Route path='/' element={<Home />} />
 
-  <Route path='/' element={<Home />} />
-  <Route path='/LogInfo' element={<LogInfo />} />
-  <Route path='/Homeowner' element={<Homeowner />} />
-  <Route path="/operator" element={<Operator />} />
-  
-</Routes>
+        {/* Step 2: Role selection (requires credentials entered on /) */}
+        <Route
+          path='/LogInfo'
+          element={
+            <PendingAuthRoute>
+              <LogInfo />
+            </PendingAuthRoute>
+          }
+        />
+
+        {/* Protected Homeowner Dashboard (requires submitted login) */}
+        <Route
+          path='/Homeowner'
+          element={
+            <ProtectedRoute>
+              <Homeowner />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Operator Dashboard (requires submitted login) */}
+        <Route
+          path='/operator'
+          element={
+            <ProtectedRoute>
+              <Operator />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Fallback to Home */}
+        <Route path='*' element={<Navigate to='/' replace />} />
+      </Routes>
     </div>
   )
 }

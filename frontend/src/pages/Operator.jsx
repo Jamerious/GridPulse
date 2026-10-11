@@ -166,7 +166,7 @@ const Operator = () => {
   const tablePadding = density === 'compact' ? 'py-1.5 text-xs' : 'py-2.5 text-sm';
 
   return (
-    <div className="py-8 space-y-6">
+    <div className="page-transition py-8 space-y-6">
       
       {/* Header with Quick Action Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
